@@ -8,14 +8,34 @@ import { controlsReducer } from './features/controls/controls-slice';
 import { countryReducer } from './features/countries/countries-slice';
 import { detailsReducer } from './features/details/details-slice';
 
+import { persistStore, 
+        persistReducer,
+        FLUSH,
+        REHYDRATE,
+        PAUSE, 
+        PERSIST,
+        PURGE,
+        REGISTER} from 'redux-persist'
+import storage from 'redux-persist/lib/storage'
+import { combineReducers } from '@reduxjs/toolkit';
+
+const rootReducer = combineReducers({        
+    theme: themeReducer,
+    controls: controlsReducer,
+    countries: countryReducer,
+    details: detailsReducer
+});
+
+const persistConfig = {
+    key: 'root',
+    storage,
+    whitelist:['theme']
+  }
+   
+  const persistedReducer = persistReducer(persistConfig, rootReducer)
 
 export const store = configureStore({
-    reducer: {
-        theme: themeReducer,
-        controls: controlsReducer,
-        countries: countryReducer,
-        details: detailsReducer
-      },
+    reducer: persistedReducer,
       devTools: true,
       middleware: getDefaultMiddleware => getDefaultMiddleware({
         thunk: {
@@ -24,6 +44,17 @@ export const store = configureStore({
                 api
             },
         },
-        serializableCheck: false
+        serializableCheck: {
+            ignoreActions: [
+                FLUSH,
+                REHYDRATE,
+                PAUSE, 
+                PERSIST,
+                PURGE,
+                REGISTER
+            ]
+        }
     })
 });
+
+export const persistor = persistStore(store);
